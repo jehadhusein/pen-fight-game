@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,46 +13,107 @@
 
 <body class="h-screen w-screen flex flex-col justify-between p-2 md:p-4 select-none">
 
-    <header class="w-full max-w-5xl mx-auto flex items-center justify-between">
+    <!-- Top Bar / Header & Scoreboard -->
+    <header class="w-full max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 z-10">
         <div class="flex items-center gap-3">
             <div class="bg-gradient-to-tr from-amber-500 to-orange-400 p-2.5 rounded-2xl shadow-lg text-slate-950">
                 <i class="fa-solid fa-pen-nib text-2xl"></i>
             </div>
-
             <div>
-                <h1 class="game-title text-2xl sm:text-3xl text-amber-400 tracking-wide">
-                    PEN FIGHT
-                </h1>
-                <p class="text-xs text-slate-400 font-semibold tracking-wider uppercase">
-                    Nostalgic Table Physics
-                </p>
+                <h1 class="game-title text-2xl sm:text-3xl text-amber-400 tracking-wide">PEN FIGHT</h1>
+                <p class="text-xs text-slate-400 font-semibold tracking-wider uppercase">Nostalgic Table Physics</p>
             </div>
+        </div>
+
+        <!-- Scoreboard -->
+        <div class="glass-panel px-6 py-2.5 rounded-2xl flex items-center gap-6 shadow-xl border border-slate-700/50">
+            <div class="flex items-center gap-3">
+                <div class="w-3.5 h-3.5 rounded-full bg-cyan-400 shadow-[0_0_10px_#22d3ee]"></div>
+                <div>
+                    <div class="text-[10px] uppercase tracking-wider font-bold text-slate-400" id="p1Label">Player 1</div>
+                    <div class="text-2xl font-black text-cyan-400 leading-none" id="scoreP1">0</div>
+                </div>
+            </div>
+
+            <div class="h-8 w-[1px] bg-slate-700"></div>
+
+            <div class="text-center px-2">
+                <div class="text-[10px] uppercase tracking-wider font-bold text-slate-400">Status</div>
+                <div id="turnBadge" class="text-xs font-bold px-3 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 animate-pulse mt-0.5">
+                    P1's Turn
+                </div>
+            </div>
+
+            <div class="h-8 w-[1px] bg-slate-700"></div>
+
+            <div class="flex items-center gap-3">
+                <div class="text-right">
+                    <div class="text-[10px] uppercase tracking-wider font-bold text-slate-400" id="p2Label">AI Bot</div>
+                    <div class="text-2xl font-black text-rose-400 leading-none" id="scoreP2">0</div>
+                </div>
+                <div class="w-3.5 h-3.5 rounded-full bg-rose-500 shadow-[0_0_10px_#f43f5e]"></div>
+            </div>
+        </div>
+
+        <!-- Game Controls -->
+        <div class="flex items-center gap-2">
+            <button id="modeToggleBtn" class="glass-btn px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 text-slate-200">
+                <i class="fa-solid fa-robot text-amber-400" id="modeIcon"></i>
+                <span id="modeText">vs AI</span>
+            </button>
+
+            <button id="soundBtn" class="glass-btn p-2.5 rounded-xl text-slate-200 hover:text-white" title="Toggle Sound">
+                <i class="fa-solid fa-volume-high text-sm" id="soundIcon"></i>
+            </button>
+
+            <button id="resetBtn" class="glass-btn p-2.5 rounded-xl text-slate-200 hover:text-amber-400" title="Restart Game">
+                <i class="fa-solid fa-rotate-right text-sm"></i>
+            </button>
         </div>
     </header>
 
+    <!-- Main Game Canvas Container -->
     <main class="flex-1 w-full max-w-5xl mx-auto my-2 relative flex items-center justify-center">
         <div id="canvasWrapper" class="w-full h-full relative rounded-3xl overflow-hidden border-8 border-amber-950/80 table-shadow bg-amber-900/40">
             <canvas id="gameCanvas" class="block w-full h-full cursor-crosshair"></canvas>
+
+            <!-- Guide Overlay Prompt -->
+            <div id="dragPrompt" class="absolute bottom-6 left-1/2 -translate-x-1/2 glass-panel px-4 py-2 rounded-full text-xs font-semibold text-slate-300 pointer-events-none flex items-center gap-2 transition-opacity duration-300 opacity-90">
+                <i class="fa-solid fa-hand-pointer text-amber-400 animate-bounce"></i>
+                <span>Drag back from your pen to aim &amp; set flick power</span>
+            </div>
+        </div>
+
+        <!-- Winner Modal Overlay -->
+        <div id="winnerModal" class="hidden absolute inset-0 glass-panel bg-slate-950/80 rounded-3xl z-30 flex flex-col items-center justify-center p-6 text-center backdrop-blur-md">
+            <div class="animate-pop flex flex-col items-center">
+                <div class="w-20 h-20 rounded-full bg-amber-500/20 border-2 border-amber-400 flex items-center justify-center mb-4 text-amber-400 text-4xl shadow-[0_0_30px_rgba(251,191,36,0.3)]">
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
+
+                <h2 id="winnerText" class="game-title text-4xl sm:text-5xl text-amber-400 mb-2">PLAYER 1 WINS!</h2>
+
+                <p class="text-slate-300 mb-6 text-sm">Opponent's pen was knocked off the wooden table!</p>
+
+                <button id="nextRoundBtn" class="px-8 py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black rounded-2xl shadow-lg shadow-orange-500/30 transform hover:-translate-y-0.5 active:translate-y-0 transition-all text-sm tracking-wide uppercase">
+                    Play Next Round <i class="fa-solid fa-arrow-right ml-2"></i>
+                </button>
+            </div>
         </div>
     </main>
 
-    <footer class="w-full max-w-5xl mx-auto flex items-center justify-between text-[11px] text-slate-400 px-2 py-1">
+    <!-- Footer Instructions -->
+    <footer class="w-full max-w-5xl mx-auto flex items-center justify-between text-[11px] text-slate-400 px-2 py-1 z-10">
         <div class="flex items-center gap-4">
-            <span class="flex items-center gap-1.5">
-                <i class="fa-solid fa-circle text-[8px] text-cyan-400"></i>
-                P1: Blue Gel Pen
-            </span>
-
-            <span class="flex items-center gap-1.5">
-                <i class="fa-solid fa-circle text-[8px] text-rose-500"></i>
-                P2/AI: Red Ball Pen
-            </span>
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-circle text-[8px] text-cyan-400"></i> P1: Blue Gel Pen</span>
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-circle text-[8px] text-rose-500"></i> P2/AI: Red Ball Pen</span>
         </div>
 
         <div class="hidden sm:block">
-            <span>Friction & Physics simulated in 2D Rigid Body</span>
+            <span>Friction &amp; Physics simulated in 2D Rigid Body</span>
         </div>
     </footer>
 
+    <script src="script.js"></script>
 </body>
 </html>
