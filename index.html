@@ -1,16 +1,15 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pen Fight - Nostalgic Flick Pen Game</title>
-
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body class="h-screen w-screen flex flex-col justify-between p-2 md:p-4 select-none">
 
     <!-- Top Bar / Header & Scoreboard -->
@@ -27,6 +26,7 @@
 
         <!-- Scoreboard -->
         <div class="glass-panel px-6 py-2.5 rounded-2xl flex items-center gap-6 shadow-xl border border-slate-700/50">
+            <!-- Player 1 Score -->
             <div class="flex items-center gap-3">
                 <div class="w-3.5 h-3.5 rounded-full bg-cyan-400 shadow-[0_0_10px_#22d3ee]"></div>
                 <div>
@@ -37,6 +37,7 @@
 
             <div class="h-8 w-[1px] bg-slate-700"></div>
 
+            <!-- Turn Indicator Banner -->
             <div class="text-center px-2">
                 <div class="text-[10px] uppercase tracking-wider font-bold text-slate-400">Status</div>
                 <div id="turnBadge" class="text-xs font-bold px-3 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 animate-pulse mt-0.5">
@@ -46,9 +47,10 @@
 
             <div class="h-8 w-[1px] bg-slate-700"></div>
 
+            <!-- Player 2 / AI Score -->
             <div class="flex items-center gap-3">
                 <div class="text-right">
-                    <div class="text-[10px] uppercase tracking-wider font-bold text-slate-400" id="p2Label">AI Bot</div>
+                    <div class="text-[10px] uppercase tracking-wider font-bold text-slate-400" id="p2Label">Player 2</div>
                     <div class="text-2xl font-black text-rose-400 leading-none" id="scoreP2">0</div>
                 </div>
                 <div class="w-3.5 h-3.5 rounded-full bg-rose-500 shadow-[0_0_10px_#f43f5e]"></div>
@@ -57,15 +59,13 @@
 
         <!-- Game Controls -->
         <div class="flex items-center gap-2">
-            <button id="modeToggleBtn" class="glass-btn px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 text-slate-200">
-                <i class="fa-solid fa-robot text-amber-400" id="modeIcon"></i>
-                <span id="modeText">vs AI</span>
+            <button id="aiFeatureBtn" class="glass-btn px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 text-slate-400 opacity-60 cursor-not-allowed" title="AI will be available in version 1.0" disabled>
+                <i class="fa-solid fa-robot text-amber-400"></i>
+                <span>AI · v1.0</span>
             </button>
-
             <button id="soundBtn" class="glass-btn p-2.5 rounded-xl text-slate-200 hover:text-white" title="Toggle Sound">
                 <i class="fa-solid fa-volume-high text-sm" id="soundIcon"></i>
             </button>
-
             <button id="resetBtn" class="glass-btn p-2.5 rounded-xl text-slate-200 hover:text-amber-400" title="Restart Game">
                 <i class="fa-solid fa-rotate-right text-sm"></i>
             </button>
@@ -80,7 +80,7 @@
             <!-- Guide Overlay Prompt -->
             <div id="dragPrompt" class="absolute bottom-6 left-1/2 -translate-x-1/2 glass-panel px-4 py-2 rounded-full text-xs font-semibold text-slate-300 pointer-events-none flex items-center gap-2 transition-opacity duration-300 opacity-90">
                 <i class="fa-solid fa-hand-pointer text-amber-400 animate-bounce"></i>
-                <span>Drag back from your pen to aim &amp; set flick power</span>
+                <span>Drag back from your pen to aim & set flick power</span>
             </div>
         </div>
 
@@ -90,11 +90,9 @@
                 <div class="w-20 h-20 rounded-full bg-amber-500/20 border-2 border-amber-400 flex items-center justify-center mb-4 text-amber-400 text-4xl shadow-[0_0_30px_rgba(251,191,36,0.3)]">
                     <i class="fa-solid fa-trophy"></i>
                 </div>
-
                 <h2 id="winnerText" class="game-title text-4xl sm:text-5xl text-amber-400 mb-2">PLAYER 1 WINS!</h2>
-
-                <p class="text-slate-300 mb-6 text-sm">Opponent's pen was knocked off the wooden table!</p>
-
+                <p id="winnerSubText" class="text-slate-300 mb-6 text-sm">Opponent's pen was knocked off the wooden table!</p>
+                
                 <button id="nextRoundBtn" class="px-8 py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black rounded-2xl shadow-lg shadow-orange-500/30 transform hover:-translate-y-0.5 active:translate-y-0 transition-all text-sm tracking-wide uppercase">
                     Play Next Round <i class="fa-solid fa-arrow-right ml-2"></i>
                 </button>
@@ -106,14 +104,14 @@
     <footer class="w-full max-w-5xl mx-auto flex items-center justify-between text-[11px] text-slate-400 px-2 py-1 z-10">
         <div class="flex items-center gap-4">
             <span class="flex items-center gap-1.5"><i class="fa-solid fa-circle text-[8px] text-cyan-400"></i> P1: Blue Gel Pen</span>
-            <span class="flex items-center gap-1.5"><i class="fa-solid fa-circle text-[8px] text-rose-500"></i> P2/AI: Red Ball Pen</span>
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-circle text-[8px] text-rose-500"></i> P2: Red Ball Pen</span>
         </div>
-
         <div class="hidden sm:block">
-            <span>Friction &amp; Physics simulated in 2D Rigid Body</span>
+            <span>Friction & Physics simulated in 2D Rigid Body</span>
         </div>
     </footer>
 
+    <!-- Game Script (Physics, AI, Canvas Renderer & Web Audio) -->
     <script src="script.js"></script>
 </body>
 </html>
