@@ -115,8 +115,8 @@
                 // Physical properties
                 this.mass = 1.2;
                 this.inertia = (1 / 12) * this.mass * (this.length * this.length + this.width * this.width);
-                this.friction = 0.96; // Version 0.5: quicker, natural stopping
-                this.angularFriction = 0.95; // Rotational drag
+                this.friction = 0.90; // Version 0.6: stronger, frame-rate-independent slowing
+                this.angularFriction = 0.88; // Version 0.6: faster rotational settling
 
                 this.colorTheme = colorTheme; // { body, cap, accent, grip }
                 this.name = name;
@@ -145,32 +145,32 @@
                 }));
             }
 
-            update(tableBounds) {
+            update(tableBounds, frameScale = 1) {
                 if (this.isOffTable) {
                     // Fall animation
                     this.scale *= 0.92;
                     this.opacity *= 0.9;
-                    this.x += this.vx * 0.5;
-                    this.y += this.vy * 0.5;
+                    this.x += this.vx * 0.5 * frameScale;
+                    this.y += this.vy * 0.5 * frameScale;
                     return;
                 }
 
                 // Apply velocities
-                this.x += this.vx;
-                this.y += this.vy;
-                this.angle += this.va;
+                this.x += this.vx * frameScale;
+                this.y += this.vy * frameScale;
+                this.angle += this.va * frameScale;
 
-                // Apply surface friction
-                this.vx *= this.friction;
-                this.vy *= this.friction;
-                this.va *= this.angularFriction;
+                // Apply time-normalized friction (baseline: 60 FPS)
+                this.vx *= Math.pow(this.friction, frameScale);
+                this.vy *= Math.pow(this.friction, frameScale);
+                this.va *= Math.pow(this.angularFriction, frameScale);
 
-                // Stop subtle drift
-                if (Math.hypot(this.vx, this.vy) < 0.12) {
+                // Stop small residual drift promptly
+                if (Math.hypot(this.vx, this.vy) < 0.18) {
                     this.vx = 0;
                     this.vy = 0;
                 }
-                if (Math.abs(this.va) < 0.002) {
+                if (Math.abs(this.va) < 0.006) {
                     this.va = 0;
                 }
 
@@ -311,6 +311,8 @@
                 this.winnerText = document.getElementById('winnerText');
                 this.dragPrompt = document.getElementById('dragPrompt');
 
+                this.lastFrameTimestamp = null;
+                this.frameScale = 1;
                 this.initEvents();
                 this.resizeCanvas();
                 this.resetGame();
@@ -555,7 +557,7 @@
 
             updatePhysics() {
                 // Update positions & friction
-                this.pens.forEach(pen => pen.update(this.table));
+                this.pens.forEach(pen => pen.update(this.table, this.frameScale || 1));
 
                 // Collision check
                 this.checkPenCollision(this.pens[0], this.pens[1]);
@@ -656,7 +658,14 @@
 
 
 
-            gameLoop() {
+            gameLoop(timestamp) {
+                // Normalize physics to elapsed time so mobile and desktop behave similarly.
+                if (this.lastFrameTimestamp !== null) {
+                    const deltaMs = Math.min(timestamp - this.lastFrameTimestamp, 50);
+                    this.frameScale = Math.max(0, deltaMs / (1000 / 60));
+                }
+                this.lastFrameTimestamp = timestamp;
+
                 // Clear Canvas
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -667,7 +676,7 @@
                 this.drawTable();
                 this.pens.forEach(pen => pen.draw(this.ctx));
 
-                requestAnimationFrame(() => this.gameLoop());
+                requestAnimationFrame((nextTimestamp) => this.gameLoop(nextTimestamp));
             }
         }
 
