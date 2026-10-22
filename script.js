@@ -147,11 +147,18 @@
 
             update(tableBounds, frameScale = 1) {
                 if (this.isOffTable) {
-                    // Fall animation
-                    this.scale *= 0.92;
-                    this.opacity *= 0.9;
+                    this.scale *= Math.pow(0.92, frameScale);
+                    this.opacity *= Math.pow(0.9, frameScale);
                     this.x += this.vx * 0.5 * frameScale;
                     this.y += this.vy * 0.5 * frameScale;
+                    this.vx *= Math.pow(0.82, frameScale);
+                    this.vy *= Math.pow(0.82, frameScale);
+                    this.va *= Math.pow(0.82, frameScale);
+                    if (Math.hypot(this.vx, this.vy) < 0.18) {
+                        this.vx = 0;
+                        this.vy = 0;
+                    }
+                    if (Math.abs(this.va) < 0.006) this.va = 0;
                     return;
                 }
 
@@ -292,6 +299,12 @@
                 this.currentPlayer = 1; // 1 or 2
                 this.gameState = 'AIMING'; // AIMING, MOVING, GAMEOVER
                 this.score = { p1: 0, p2: 0 };
+                try {
+                    const savedScore = JSON.parse(localStorage.getItem('penFightScores'));
+                    if (savedScore && Number.isFinite(savedScore.p1) && Number.isFinite(savedScore.p2)) {
+                        this.score = { p1: Math.max(0, savedScore.p1), p2: Math.max(0, savedScore.p2) };
+                    }
+                } catch (_) {}
 
                 // Physics Simulation Canvas scale
                 this.table = { x: 0, y: 0, w: 0, h: 0 };
@@ -300,6 +313,7 @@
                 // Dragging / Aiming Mechanics
                 this.dragStart = null;
                 this.dragCurrent = null;
+                this.activePointerId = null;
                 this.maxDragDist = 140;
 
                 // UI Elements
@@ -310,6 +324,7 @@
                 this.modal = document.getElementById('winnerModal');
                 this.winnerText = document.getElementById('winnerText');
                 this.dragPrompt = document.getElementById('dragPrompt');
+                this.updateScoreboard();
 
                 this.lastFrameTimestamp = null;
                 this.frameScale = 1;
@@ -323,8 +338,12 @@
 
             resizeCanvas() {
                 const rect = this.wrapper.getBoundingClientRect();
-                this.canvas.width = rect.width;
-                this.canvas.height = rect.height;
+                const width = Math.max(1, Math.round(rect.width));
+                const height = Math.max(1, Math.round(rect.height));
+                if (this.canvas.width !== width || this.canvas.height !== height) {
+                    this.canvas.width = width;
+                    this.canvas.height = height;
+                }
 
                 // Table margins (Wooden rim border)
                 const margin = Math.min(rect.width, rect.height) * 0.06;
@@ -343,6 +362,7 @@
                 }
 
                 this.gameState = 'AIMING';
+                this.cancelDrag();
                 this.currentPlayer = 1;
                 this.turnBadge.textContent = "Player 1's Turn";
                 this.turnBadge.className = "text-xs font-bold px-3 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 animate-pulse mt-0.5";
@@ -381,11 +401,17 @@
             initEvents() {
                 window.addEventListener('resize', () => this.resizeCanvas());
                 window.addEventListener('orientationchange', () => setTimeout(() => this.resizeCanvas(), 100));
+                if ('ResizeObserver' in window) {
+                    this.resizeObserver = new ResizeObserver(() => this.resizeCanvas());
+                    this.resizeObserver.observe(this.wrapper);
+                }
 
-                // Pointer Events for Dragging / Aiming
+                this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
                 this.canvas.addEventListener('pointerdown', (e) => this.handlePointerDown(e));
-                window.addEventListener('pointermove', (e) => this.handlePointerMove(e));
-                window.addEventListener('pointerup', (e) => this.handlePointerUp(e));
+                this.canvas.addEventListener('pointermove', (e) => this.handlePointerMove(e));
+                this.canvas.addEventListener('pointerup', (e) => this.handlePointerUp(e));
+                this.canvas.addEventListener('pointercancel', () => this.cancelDrag());
+                this.canvas.addEventListener('lostpointercapture', () => this.cancelDrag());
                 // AI is displayed as a disabled placeholder until version 1.0.
 
                 document.getElementById('soundBtn').addEventListener('click', () => {
@@ -414,17 +440,18 @@
             }
 
             handlePointerDown(e) {
+                if (this.gameState !== 'AIMING' || this.dragStart) return;
+                if (e.pointerType === 'mouse' && e.button !== 0) return;
+                e.preventDefault();
                 audio.init();
-                if (this.gameState !== 'AIMING') return;
 
                 const pos = this.getPointerPos(e);
                 const activePen = this.pens[this.currentPlayer - 1];
-
-                // Check distance to active pen
                 const dist = Math.hypot(pos.x - activePen.x, pos.y - activePen.y);
                 if (dist < activePen.length) {
                     this.dragStart = pos;
                     this.dragCurrent = pos;
+                    this.activePointerId = e.pointerId;
                     if (this.canvas.setPointerCapture && e.pointerId !== undefined) {
                         try { this.canvas.setPointerCapture(e.pointerId); } catch (_) {}
                     }
@@ -432,38 +459,47 @@
             }
 
             handlePointerMove(e) {
-                if (!this.dragStart) return;
+                if (!this.dragStart || e.pointerId !== this.activePointerId) return;
+                e.preventDefault();
                 this.dragCurrent = this.getPointerPos(e);
             }
 
             handlePointerUp(e) {
-                if (!this.dragStart) return;
+                if (!this.dragStart || e.pointerId !== this.activePointerId) return;
+                e.preventDefault();
+                this.dragCurrent = this.getPointerPos(e);
 
                 const activePen = this.pens[this.currentPlayer - 1];
                 const dx = this.dragStart.x - this.dragCurrent.x;
                 const dy = this.dragStart.y - this.dragCurrent.y;
                 const dist = Math.hypot(dx, dy);
 
-                if (dist > 15) {
-                    // Execute Flick
+                this.dragStart = null;
+                this.dragCurrent = null;
+                this.activePointerId = null;
+
+                if (dist > 15 && this.gameState === 'AIMING') {
                     const power = Math.min(dist, this.maxDragDist) / this.maxDragDist;
                     const speed = power * 22;
-
                     const angle = Math.atan2(dy, dx);
                     activePen.vx = Math.cos(angle) * speed;
                     activePen.vy = Math.sin(angle) * speed;
-
-                    // Offset torque based on drag angle relative to pen angle
-                    const torque = Math.sin(angle - activePen.angle) * power * 0.35;
-                    activePen.va = torque;
+                    activePen.va = Math.sin(angle - activePen.angle) * power * 0.35;
 
                     audio.playFlick();
                     this.gameState = 'MOVING';
                     this.dragPrompt.style.opacity = '0';
                 }
 
+                if (this.canvas.hasPointerCapture && this.canvas.hasPointerCapture(e.pointerId)) {
+                    try { this.canvas.releasePointerCapture(e.pointerId); } catch (_) {}
+                }
+            }
+
+            cancelDrag() {
                 this.dragStart = null;
                 this.dragCurrent = null;
+                this.activePointerId = null;
             }
 
             /**
@@ -611,6 +647,9 @@
             updateScoreboard() {
                 this.scoreP1El.textContent = this.score.p1;
                 this.scoreP2El.textContent = this.score.p2;
+                try {
+                    localStorage.setItem('penFightScores', JSON.stringify(this.score));
+                } catch (_) {}
             }
 
             showWinner(title, sub) {
