@@ -380,6 +380,7 @@
 
             initEvents() {
                 window.addEventListener('resize', () => this.resizeCanvas());
+                window.addEventListener('orientationchange', () => setTimeout(() => this.resizeCanvas(), 100));
 
                 // Pointer Events for Dragging / Aiming
                 this.canvas.addEventListener('pointerdown', (e) => this.handlePointerDown(e));
@@ -424,6 +425,9 @@
                 if (dist < activePen.length) {
                     this.dragStart = pos;
                     this.dragCurrent = pos;
+                    if (this.canvas.setPointerCapture && e.pointerId !== undefined) {
+                        try { this.canvas.setPointerCapture(e.pointerId); } catch (_) {}
+                    }
                 }
             }
 
@@ -658,6 +662,53 @@
 
 
 
+            drawAimIndicator() {
+                if (!this.dragStart || !this.dragCurrent || this.gameState !== 'AIMING') return;
+                const activePen = this.pens[this.currentPlayer - 1];
+                const dx = this.dragStart.x - this.dragCurrent.x;
+                const dy = this.dragStart.y - this.dragCurrent.y;
+                const distance = Math.hypot(dx, dy);
+                if (distance < 4) return;
+
+                const power = Math.min(distance, this.maxDragDist) / this.maxDragDist;
+                const length = 35 + power * 95;
+                const angle = Math.atan2(dy, dx);
+                const endX = activePen.x + Math.cos(angle) * length;
+                const endY = activePen.y + Math.sin(angle) * length;
+                const color = this.currentPlayer === 1 ? '#67e8f9' : '#fda4af';
+
+                this.ctx.save();
+                this.ctx.strokeStyle = color;
+                this.ctx.fillStyle = color;
+                this.ctx.globalAlpha = 0.55 + power * 0.4;
+                this.ctx.lineWidth = 2 + power * 2;
+                this.ctx.setLineDash([6, 5]);
+                this.ctx.beginPath();
+                this.ctx.moveTo(activePen.x, activePen.y);
+                this.ctx.lineTo(endX, endY);
+                this.ctx.stroke();
+                this.ctx.setLineDash([]);
+
+                const head = 8 + power * 4;
+                this.ctx.beginPath();
+                this.ctx.moveTo(endX, endY);
+                this.ctx.lineTo(endX - Math.cos(angle - 0.48) * head, endY - Math.sin(angle - 0.48) * head);
+                this.ctx.lineTo(endX - Math.cos(angle + 0.48) * head, endY - Math.sin(angle + 0.48) * head);
+                this.ctx.closePath();
+                this.ctx.fill();
+
+                const barWidth = 54;
+                const barHeight = 5;
+                const barX = activePen.x - barWidth / 2;
+                const barY = activePen.y - activePen.length * 0.72;
+                this.ctx.globalAlpha = 0.75;
+                this.ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
+                this.ctx.fillRect(barX, barY, barWidth, barHeight);
+                this.ctx.fillStyle = color;
+                this.ctx.fillRect(barX, barY, barWidth * power, barHeight);
+                this.ctx.restore();
+            }
+
             gameLoop(timestamp) {
                 // Normalize physics to elapsed time so mobile and desktop behave similarly.
                 if (this.lastFrameTimestamp !== null) {
@@ -675,6 +726,7 @@
                 // Render Scene
                 this.drawTable();
                 this.pens.forEach(pen => pen.draw(this.ctx));
+                this.drawAimIndicator();
 
                 requestAnimationFrame((nextTimestamp) => this.gameLoop(nextTimestamp));
             }

@@ -1,13 +1,34 @@
 @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
 
+        html {
+            min-height: 100%;
+            background-color: #121826;
+        }
+
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: #121826;
             color: #f3f4f6;
-            touch-action: none;
+            touch-action: pan-y;
             user-select: none;
             -webkit-user-select: none;
-            overflow: hidden;
+            min-height: 100vh;
+            min-height: 100svh;
+            height: auto;
+            overflow-x: hidden;
+            overflow-y: auto;
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        #canvasWrapper {
+            min-height: 360px;
+        }
+
+        @media (max-width: 640px) {
+            body { gap: 0.5rem; }
+            main { flex: none !important; min-height: 0 !important; height: auto; }
+            #canvasWrapper { height: min(112vw, 68svh) !important; min-height: 360px; max-height: 760px; }
+            footer { flex-wrap: wrap; gap: 0.4rem; }
         }
 
         .game-title {

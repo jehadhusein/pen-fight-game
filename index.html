@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="h-screen w-screen flex flex-col justify-between p-2 md:p-4 select-none">
+<body class="min-h-screen w-full flex flex-col justify-between p-2 md:p-4 select-none">
 
     <!-- Top Bar / Header & Scoreboard -->
     <header class="w-full max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 z-10">
@@ -58,10 +58,14 @@
         </div>
 
         <!-- Game Controls -->
-        <div class="flex items-center gap-2">
-            <button id="aiFeatureBtn" class="glass-btn px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 text-slate-400 opacity-60 cursor-not-allowed" title="AI will be available in version 1.0" disabled>
+        <div class="flex items-center justify-center flex-wrap gap-2">
+            <button id="twoPlayerModeBtn" class="glass-btn px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2 text-cyan-300 border-cyan-400/40" title="Two human players">
+                <i class="fa-solid fa-user-group"></i>
+                <span>2 Players</span>
+            </button>
+            <button id="aiFeatureBtn" class="glass-btn px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2 text-slate-400 opacity-60 cursor-not-allowed" title="AI mode will be available in version 1.0" disabled>
                 <i class="fa-solid fa-robot text-amber-400"></i>
-                <span>AI · v1.0</span>
+                <span>VS AI · v1.0</span>
             </button>
             <button id="soundBtn" class="glass-btn p-2.5 rounded-xl text-slate-200 hover:text-white" title="Toggle Sound">
                 <i class="fa-solid fa-volume-high text-sm" id="soundIcon"></i>
