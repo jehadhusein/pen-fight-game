@@ -384,6 +384,24 @@ class SoundFX {
                     audio.init();
                     this.resetGame(false);
                 });
+
+                const feedbackModal = document.getElementById('feedbackModal');
+                const feedbackModalBtn = document.getElementById('feedbackModalBtn');
+                const closeFeedbackBtn = document.getElementById('closeFeedbackBtn');
+
+                if (feedbackModalBtn && feedbackModal && closeFeedbackBtn) {
+                    feedbackModalBtn.addEventListener('click', () => {
+                        feedbackModal.classList.remove('hidden');
+                    });
+                    closeFeedbackBtn.addEventListener('click', () => {
+                        feedbackModal.classList.add('hidden');
+                    });
+                    feedbackModal.addEventListener('click', (e) => {
+                        if (e.target === feedbackModal) {
+                            feedbackModal.classList.add('hidden');
+                        }
+                    });
+                }
             }
 
             getPointerPos(e) {

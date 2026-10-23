@@ -89,6 +89,9 @@
             <button id="resetBtn" class="glass-btn p-2.5 rounded-xl text-slate-200 hover:text-amber-400" title="Restart Game">
                 <i class="fa-solid fa-rotate-right text-sm"></i>
             </button>
+            <button id="feedbackModalBtn" class="glass-btn p-2.5 rounded-xl text-slate-200 hover:text-amber-400" title="Feedback & Info">
+                <i class="fa-regular fa-comment-dots text-sm"></i>
+            </button>
         </div>
     </header>
 
@@ -116,6 +119,43 @@
                 <button id="nextRoundBtn" class="px-8 py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black rounded-2xl shadow-lg shadow-orange-500/30 transform hover:-translate-y-0.5 active:translate-y-0 transition-all text-sm tracking-wide uppercase">
                     Play Next Round <i class="fa-solid fa-arrow-right ml-2"></i>
                 </button>
+            </div>
+        </div>
+
+        <!-- Feedback & Info Modal Overlay -->
+        <div id="feedbackModal" class="hidden absolute inset-0 glass-panel bg-slate-950/85 rounded-3xl z-40 flex flex-col items-center justify-center p-4 sm:p-6 text-left backdrop-blur-md">
+            <div class="animate-pop w-full max-w-md bg-slate-900/95 border border-slate-700/60 p-5 sm:p-6 rounded-2xl shadow-2xl relative">
+                <button id="closeFeedbackBtn" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg p-1">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <h2 class="text-xl sm:text-2xl font-bold text-slate-100 mb-1">Enjoyed the game?</h2>
+                <p class="text-xs text-slate-300 mb-5 leading-relaxed">Found a bug or have an idea to improve the game? I'd love to hear from you.</p>
+                
+                <!-- Report a bug card -->
+                <div class="bg-slate-800/80 border border-slate-700/50 rounded-xl p-4 mb-3.5">
+                    <div class="flex items-center gap-2.5 text-slate-100 font-semibold text-sm mb-1">
+                        <i class="fa-solid fa-bug text-amber-400 text-base"></i>
+                        <span>Report a bug</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mb-2.5">Found something broken? Let me know on GitHub.</p>
+                    <a href="https://github.com/jehadhusein/pen-fight-game/issues" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 underline font-medium">
+                        GitHub Issues <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                    </a>
+                </div>
+                
+               <!-- Share feedback card -->
+<div class="bg-slate-800/80 border border-slate-700/50 rounded-xl p-4">
+    <div class="flex items-center gap-2.5 text-slate-100 font-semibold text-sm mb-1">
+        <i class="fa-regular fa-lightbulb text-amber-400 text-base"></i>
+        <span>Share feedback</span>
+    </div>
+    <p class="text-xs text-slate-400 mb-2.5">Have a suggestion or just want to say hello?</p>
+    <div class="flex items-center gap-3 text-xs text-amber-400 font-medium">
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSfkwIuUhyqIF-5hrrBkZkrZ5rBjDH5zKcWxPjwW_ssyKYpXqA/viewform?usp=sharing&ouid=118012002388214033522" target="_blank" rel="noopener noreferrer" class="hover:text-amber-300 underline">Feedback Form</a>
+        <span class="text-slate-600">•</span>
+        <a href="https://www.facebook.com/jehad.husein.00" target="_blank" rel="noopener noreferrer" class="hover:text-amber-300 underline">Facebook</a>
+    </div>
+</div>
             </div>
         </div>
     </main>
