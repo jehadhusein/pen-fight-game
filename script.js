@@ -1,8 +1,4 @@
-/**
-         * WEB AUDIO SYNTHESIZER
-         * Generates sound effects dynamically without external assets
-         */
-        class SoundFX {
+class SoundFX {
             constructor() {
                 this.ctx = null;
                 this.enabled = true;
@@ -96,36 +92,27 @@
 
         const audio = new SoundFX();
 
-        /**
-         * 2D RIGID BODY PEN CLASS
-         */
         class Pen {
             constructor(x, y, length, width, colorTheme, name) {
                 this.x = x;
                 this.y = y;
                 this.length = length;
                 this.width = width;
-                this.angle = 0; // Direction facing (radians)
-                
-                // Linear & Angular Velocity
+                this.angle = 0;
                 this.vx = 0;
                 this.vy = 0;
-                this.va = 0; // Angular velocity
-
-                // Physical properties
+                this.va = 0;
                 this.mass = 1.2;
                 this.inertia = (1 / 12) * this.mass * (this.length * this.length + this.width * this.width);
-                this.friction = 0.90; // Version 0.6: stronger, frame-rate-independent slowing
-                this.angularFriction = 0.88; // Version 0.6: faster rotational settling
+                this.friction = 0.90;
+                this.angularFriction = 0.88;
 
-                this.colorTheme = colorTheme; // { body, cap, accent, grip }
+                this.colorTheme = colorTheme;
                 this.name = name;
                 this.isOffTable = false;
                 this.opacity = 1.0;
                 this.scale = 1.0;
             }
-
-            // Get local bounding box vertices in world space
             getVertices() {
                 const cos = Math.cos(this.angle);
                 const sin = Math.sin(this.angle);
@@ -161,18 +148,12 @@
                     if (Math.abs(this.va) < 0.006) this.va = 0;
                     return;
                 }
-
-                // Apply velocities
                 this.x += this.vx * frameScale;
                 this.y += this.vy * frameScale;
                 this.angle += this.va * frameScale;
-
-                // Apply time-normalized friction (baseline: 60 FPS)
                 this.vx *= Math.pow(this.friction, frameScale);
                 this.vy *= Math.pow(this.friction, frameScale);
                 this.va *= Math.pow(this.angularFriction, frameScale);
-
-                // Stop small residual drift promptly
                 if (Math.hypot(this.vx, this.vy) < 0.18) {
                     this.vx = 0;
                     this.vy = 0;
@@ -180,8 +161,6 @@
                 if (Math.abs(this.va) < 0.006) {
                     this.va = 0;
                 }
-
-                // Check if pen center or vertices fall off table edges
                 const vertices = this.getVertices();
                 let outCount = 0;
                 for (let v of vertices) {
@@ -190,8 +169,6 @@
                         outCount++;
                     }
                 }
-
-                // If more than 2 vertices are off table, pen falls off
                 if (outCount >= 2 || 
                     this.x < tableBounds.x - 10 || this.x > tableBounds.x + tableBounds.w + 10 ||
                     this.y < tableBounds.y - 10 || this.y > tableBounds.y + tableBounds.h + 10) {
@@ -214,26 +191,18 @@
 
                 const halfL = this.length / 2;
                 const halfW = this.width / 2;
-
-                // Drop Shadow
                 if (!this.isOffTable) {
                     ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
                     ctx.shadowBlur = 12;
                     ctx.shadowOffsetX = 6;
                     ctx.shadowOffsetY = 8;
                 }
-
-                // Main Pen Barrel
                 ctx.fillStyle = this.colorTheme.body;
                 ctx.beginPath();
                 ctx.roundRect(-halfL + 12, -halfW, this.length - 24, this.width, [3]);
                 ctx.fill();
-
-                // Rubber Grip
                 ctx.fillStyle = this.colorTheme.grip;
                 ctx.fillRect(-halfL + 25, -halfW, 20, this.width);
-
-                // Grip Texture Lines
                 ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
                 ctx.lineWidth = 1;
                 for (let i = -halfL + 28; i < -halfL + 42; i += 4) {
@@ -242,19 +211,13 @@
                     ctx.lineTo(i, halfW);
                     ctx.stroke();
                 }
-
-                // Metallic / Plastic Cap
                 ctx.fillStyle = this.colorTheme.cap;
                 ctx.beginPath();
                 ctx.roundRect(-halfL, -halfW, 18, this.width, [4, 0, 0, 4]);
                 ctx.fill();
-
-                // Clip on Cap
                 ctx.fillStyle = this.colorTheme.accent;
                 ctx.fillRect(-halfL + 2, -halfW - 3, 16, 3);
-
-                // Pen Tip (Front)
-                ctx.fillStyle = '#d1d5db'; // Metal nib housing
+                ctx.fillStyle = '#d1d5db';
                 ctx.beginPath();
                 ctx.moveTo(halfL - 12, -halfW);
                 ctx.lineTo(halfL - 2, -halfW + 3);
@@ -262,8 +225,6 @@
                 ctx.lineTo(halfL - 12, halfW);
                 ctx.closePath();
                 ctx.fill();
-
-                // Nib Tip Point
                 ctx.fillStyle = '#1e293b';
                 ctx.beginPath();
                 ctx.moveTo(halfL - 2, -halfW + 4);
@@ -271,8 +232,6 @@
                 ctx.lineTo(halfL - 2, halfW - 4);
                 ctx.closePath();
                 ctx.fill();
-
-                // Highlight Shine Reflection
                 const gradient = ctx.createLinearGradient(0, -halfW, 0, halfW);
                 gradient.addColorStop(0, 'rgba(255, 255, 255, 0.35)');
                 gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.0)');
@@ -285,38 +244,23 @@
             }
         }
 
-        /**
-         * GAME ENGINE & CONTROLLER
-         */
         class PenFightGame {
             constructor() {
                 this.canvas = document.getElementById('gameCanvas');
                 this.ctx = this.canvas.getContext('2d');
                 this.wrapper = document.getElementById('canvasWrapper');
-
-                // Game Modes & States
-                this.isVSComputer = false; // Version 0.5 supports two human players only.
-                this.currentPlayer = 1; // 1 or 2
-                this.gameState = 'AIMING'; // AIMING, MOVING, GAMEOVER
+                this.isVSComputer = false;
+                this.currentPlayer = 1;
+                this.gameState = 'AIMING';
                 this.score = { p1: 0, p2: 0 };
-                try {
-                    const savedScore = JSON.parse(localStorage.getItem('penFightScores'));
-                    if (savedScore && Number.isFinite(savedScore.p1) && Number.isFinite(savedScore.p2)) {
-                        this.score = { p1: Math.max(0, savedScore.p1), p2: Math.max(0, savedScore.p2) };
-                    }
-                } catch (_) {}
-
-                // Physics Simulation Canvas scale
+                this.ai = new window.PenFightAI();
+                this.aiThinking = false;
                 this.table = { x: 0, y: 0, w: 0, h: 0 };
                 this.pens = [];
-
-                // Dragging / Aiming Mechanics
                 this.dragStart = null;
                 this.dragCurrent = null;
                 this.activePointerId = null;
                 this.maxDragDist = 140;
-
-                // UI Elements
                 this.turnBadge = document.getElementById('turnBadge');
                 this.scoreP1El = document.getElementById('scoreP1');
                 this.scoreP2El = document.getElementById('scoreP2');
@@ -331,8 +275,6 @@
                 this.initEvents();
                 this.resizeCanvas();
                 this.resetGame();
-
-                // Start Render Loop
                 requestAnimationFrame((timestamp) => this.gameLoop(timestamp));
             }
 
@@ -344,8 +286,6 @@
                     this.canvas.width = width;
                     this.canvas.height = height;
                 }
-
-                // Table margins (Wooden rim border)
                 const margin = Math.min(rect.width, rect.height) * 0.06;
                 this.table = {
                     x: margin,
@@ -364,16 +304,13 @@
                 this.gameState = 'AIMING';
                 this.cancelDrag();
                 this.currentPlayer = 1;
+                this.aiThinking = false;
                 this.turnBadge.textContent = "Player 1's Turn";
                 this.turnBadge.className = "text-xs font-bold px-3 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 animate-pulse mt-0.5";
                 this.modal.classList.add('hidden');
                 this.dragPrompt.style.opacity = '1';
-
-                // Create Pens
                 const penLength = Math.min(this.canvas.width, this.canvas.height) * 0.18;
                 const penWidth = penLength * 0.13;
-
-                // Player 1 (Left Side) - Blue Theme
                 const p1 = new Pen(
                     this.table.x + this.table.w * 0.25,
                     this.table.y + this.table.h * 0.5,
@@ -383,15 +320,13 @@
                     'Player 1'
                 );
                 p1.angle = 0;
-
-                // Player 2 / AI (Right Side) - Red Theme
                 const p2 = new Pen(
                     this.table.x + this.table.w * 0.75,
                     this.table.y + this.table.h * 0.5,
                     penLength,
                     penWidth,
                     { body: '#e11d48', cap: '#be123c', accent: '#fb7185', grip: '#881337' },
-                    'Player 2'
+                    this.isVSComputer ? 'Computer' : 'Player 2'
                 );
                 p2.angle = Math.PI;
 
@@ -412,7 +347,27 @@
                 this.canvas.addEventListener('pointerup', (e) => this.handlePointerUp(e));
                 this.canvas.addEventListener('pointercancel', () => this.cancelDrag());
                 this.canvas.addEventListener('lostpointercapture', () => this.cancelDrag());
-                // AI is displayed as a disabled placeholder until version 1.0.
+
+                const aiButton = document.getElementById('aiFeatureBtn');
+                const difficultySelect = document.getElementById('aiDifficulty');
+                this.ai.setDifficulty(difficultySelect.value);
+                aiButton.addEventListener('click', () => {
+                    this.isVSComputer = !this.isVSComputer;
+                    aiButton.setAttribute('aria-pressed', String(this.isVSComputer));
+                    document.getElementById('twoPlayerModeBtn').classList.toggle('mode-active', !this.isVSComputer);
+                    aiButton.classList.toggle('mode-active', this.isVSComputer);
+                    this.p2LabelEl.textContent = this.isVSComputer ? 'Computer' : 'Player 2';
+                    this.resetGame(true);
+                });
+                document.getElementById('twoPlayerModeBtn').addEventListener('click', () => {
+                    this.isVSComputer = false;
+                    aiButton.setAttribute('aria-pressed', 'false');
+                    aiButton.classList.remove('mode-active');
+                    document.getElementById('twoPlayerModeBtn').classList.add('mode-active');
+                    this.p2LabelEl.textContent = 'Player 2';
+                    this.resetGame(true);
+                });
+                difficultySelect.addEventListener('change', () => this.ai.setDifficulty(difficultySelect.value));
 
                 document.getElementById('soundBtn').addEventListener('click', () => {
                     audio.init();
@@ -502,9 +457,6 @@
                 this.activePointerId = null;
             }
 
-            /**
-             * SAT OBB (ORIENTED BOUNDING BOX) COLLISION DETECTION
-             */
             checkPenCollision(p1, p2) {
                 if (p1.isOffTable || p2.isOffTable) return;
 
@@ -543,7 +495,7 @@
                     const proj2 = project(poly2, axis);
 
                     if (proj1.max < proj2.min || proj2.max < proj1.min) {
-                        return; // Separation found -> No collision
+                        return;
                     }
 
                     const overlap = Math.min(proj1.max - proj2.min, proj2.max - proj1.min);
@@ -552,29 +504,22 @@
                         smallestAxis = axis;
                     }
                 }
-
-                // Resolve Impulse & Collision Response
                 if (smallestAxis) {
-                    // Center vector
                     const d = { x: p2.x - p1.x, y: p2.y - p1.y };
                     if (d.x * smallestAxis.x + d.y * smallestAxis.y < 0) {
                         smallestAxis.x = -smallestAxis.x;
                         smallestAxis.y = -smallestAxis.y;
                     }
-
-                    // Positional separation
                     p1.x -= smallestAxis.x * minOverlap * 0.5;
                     p1.y -= smallestAxis.y * minOverlap * 0.5;
                     p2.x += smallestAxis.x * minOverlap * 0.5;
                     p2.y += smallestAxis.y * minOverlap * 0.5;
-
-                    // Relative velocity physics impulse
                     const rvx = p2.vx - p1.vx;
                     const rvy = p2.vy - p1.vy;
                     const velAlongNormal = rvx * smallestAxis.x + rvy * smallestAxis.y;
 
                     if (velAlongNormal < 0) {
-                        const restitution = 0.65; // Elasticity
+                        const restitution = 0.65;
                         let impulse = -(1 + restitution) * velAlongNormal;
                         impulse /= (1 / p1.mass + 1 / p2.mass);
 
@@ -585,24 +530,18 @@
                         p1.vy -= (1 / p1.mass) * impulseY;
                         p2.vx += (1 / p2.mass) * impulseX;
                         p2.vy += (1 / p2.mass) * impulseY;
-
-                        // Add realistic rotational torque on impact
                         p1.va += (Math.random() - 0.5) * 0.25 * (impulse / p1.mass);
                         p2.va += (Math.random() - 0.5) * 0.25 * (impulse / p2.mass);
 
                         audio.playHit(Math.min(impulse * 0.2, 1.5));
+                        if (navigator.vibrate) navigator.vibrate(Math.min(35, Math.max(12, Math.round(impulse * 4))));
                     }
                 }
             }
 
             updatePhysics() {
-                // Update positions & friction
                 this.pens.forEach(pen => pen.update(this.table, this.frameScale || 1));
-
-                // Collision check
                 this.checkPenCollision(this.pens[0], this.pens[1]);
-
-                // Handle Turn Transitions when movement stops
                 if (this.gameState === 'MOVING') {
                     const anyMoving = this.pens.some(p => p.isMoving());
                     if (!anyMoving) {
@@ -631,25 +570,41 @@
                     this.updateScoreboard();
                     audio.playWin();
                 } else {
-                    // Switch turn
                     this.currentPlayer = this.currentPlayer === 1 ? 2 : 1;
                     this.gameState = 'AIMING';
 
                     const isP1 = this.currentPlayer === 1;
-                    this.turnBadge.textContent = isP1 ? "Player 1's Turn" : "Player 2's Turn";
-                    this.turnBadge.className = isP1 
+                    this.turnBadge.textContent = isP1 ? "Player 1's Turn" : (this.isVSComputer ? "Computer's Turn" : "Player 2's Turn");
+                    this.turnBadge.className = isP1
                         ? "text-xs font-bold px-3 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 animate-pulse mt-0.5"
                         : "text-xs font-bold px-3 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 animate-pulse mt-0.5";
+                    if (this.isVSComputer && this.currentPlayer === 2) this.scheduleAIShot();
 
                 }
+            }
+
+            scheduleAIShot() {
+                if (this.aiThinking || this.gameState !== 'AIMING' || !this.isVSComputer) return;
+                this.aiThinking = true;
+                this.turnBadge.textContent = 'Computer is thinking…';
+                window.setTimeout(() => {
+                    if (!this.isVSComputer || this.gameState !== 'AIMING' || this.currentPlayer !== 2) {
+                        this.aiThinking = false;
+                        return;
+                    }
+                    const shot = this.ai.chooseShot(this.pens[1], this.pens[0], this.table);
+                    Object.assign(this.pens[1], shot);
+                    this.aiThinking = false;
+                    audio.init();
+                    audio.playFlick();
+                    this.gameState = 'MOVING';
+                    this.dragPrompt.style.opacity = '0';
+                }, this.ai.difficulty === 'easy' ? 550 : 800);
             }
 
             updateScoreboard() {
                 this.scoreP1El.textContent = this.score.p1;
                 this.scoreP2El.textContent = this.score.p2;
-                try {
-                    localStorage.setItem('penFightScores', JSON.stringify(this.score));
-                } catch (_) {}
             }
 
             showWinner(title, sub) {
@@ -658,19 +613,11 @@
                 this.modal.classList.remove('hidden');
             }
 
-            /**
-             * RENDER GRAPHICS & TABLE BACKGROUND
-             */
             drawTable() {
-                // Table Outer Border / Wood Bezel
                 this.ctx.fillStyle = '#2d1810';
                 this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-                // Wood Grain Surface
                 this.ctx.fillStyle = '#4a2810';
                 this.ctx.fillRect(this.table.x, this.table.y, this.table.w, this.table.h);
-
-                // Decorative Wooden Planks Lines
                 this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.12)';
                 this.ctx.lineWidth = 2;
                 const plankHeight = this.table.h / 6;
@@ -680,13 +627,9 @@
                     this.ctx.lineTo(this.table.x + this.table.w, y);
                     this.ctx.stroke();
                 }
-
-                // Inner Table Border Highlight Line
                 this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
                 this.ctx.lineWidth = 3;
                 this.ctx.strokeRect(this.table.x, this.table.y, this.table.w, this.table.h);
-
-                // Table Corner Pocket Accents
                 this.ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
                 const r = 12;
                 [[this.table.x, this.table.y], 
@@ -749,20 +692,13 @@
             }
 
             gameLoop(timestamp) {
-                // Normalize physics to elapsed time so mobile and desktop behave similarly.
                 if (this.lastFrameTimestamp !== null) {
                     const deltaMs = Math.min(timestamp - this.lastFrameTimestamp, 50);
                     this.frameScale = Math.max(0, deltaMs / (1000 / 60));
                 }
                 this.lastFrameTimestamp = timestamp;
-
-                // Clear Canvas
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-                // Update Logic
                 this.updatePhysics();
-
-                // Render Scene
                 this.drawTable();
                 this.pens.forEach(pen => pen.draw(this.ctx));
                 this.drawAimIndicator();
@@ -770,8 +706,6 @@
                 requestAnimationFrame((nextTimestamp) => this.gameLoop(nextTimestamp));
             }
         }
-
-        // Initialize Game on Load
         window.onload = () => {
             new PenFightGame();
         };

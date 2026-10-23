@@ -97,3 +97,17 @@
         .animate-pop {
             animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
+
+
+.mode-picker { display: flex; align-items: center; gap: 4px; }
+#aiDifficulty { color: #f3f4f6; padding: 0.55rem 0.45rem; max-width: 88px; }
+#aiDifficulty option { color: #111827; }
+#aiFeatureBtn[aria-pressed="true"] { border-color: rgba(251, 191, 36, 0.7); background: rgba(245, 158, 11, 0.16); }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+#canvasWrapper, #gameCanvas { touch-action: none; -webkit-user-select: none; user-select: none; }
+@media (max-width: 640px) {
+  body { min-height: 100dvh; }
+  body > header { padding-top: max(0.25rem, env(safe-area-inset-top)); }
+  .mode-picker { gap: 3px; }
+  #aiDifficulty { max-width: 82px; font-size: 11px; }
+}
