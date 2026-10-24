@@ -306,7 +306,7 @@ class SoundFX {
                 this.currentPlayer = 1;
                 this.aiThinking = false;
                 this.turnBadge.textContent = "Player 1's Turn";
-                this.turnBadge.className = "text-xs font-bold px-3 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 animate-pulse mt-0.5";
+                this.turnBadge.className = "turn-badge w-28 h-10 text-xs font-bold px-2 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 animate-pulse mt-0.5";
                 this.modal.classList.add('hidden');
                 this.dragPrompt.style.opacity = '1';
                 const penLength = Math.min(this.canvas.width, this.canvas.height) * 0.18;
@@ -552,14 +552,30 @@ class SoundFX {
                         p2.va += (Math.random() - 0.5) * 0.25 * (impulse / p2.mass);
 
                         audio.playHit(Math.min(impulse * 0.2, 1.5));
-                        if (navigator.vibrate) navigator.vibrate(Math.min(35, Math.max(12, Math.round(impulse * 4))));
+                        // Vibration is optional: some browsers/devices expose the API but reject the call.
+                        if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+                            try {
+                                navigator.vibrate(Math.min(35, Math.max(12, Math.round(impulse * 4))));
+                            } catch (_) {
+                                // Unsupported or blocked vibration must never interrupt the game loop.
+                            }
+                        }
                     }
                 }
             }
 
             updatePhysics() {
-                this.pens.forEach(pen => pen.update(this.table, this.frameScale || 1));
-                this.checkPenCollision(this.pens[0], this.pens[1]);
+                // Split long frames into smaller physics steps. This reduces tunnelling when
+                // a mobile browser briefly drops frames, while preserving the existing motion scale.
+                const frameScale = Math.max(0, this.frameScale || 1);
+                const substeps = Math.max(1, Math.ceil(frameScale));
+                const stepScale = frameScale / substeps;
+
+                for (let step = 0; step < substeps; step++) {
+                    this.pens.forEach(pen => pen.update(this.table, stepScale));
+                    this.checkPenCollision(this.pens[0], this.pens[1]);
+                }
+
                 if (this.gameState === 'MOVING') {
                     const anyMoving = this.pens.some(p => p.isMoving());
                     if (!anyMoving) {
@@ -594,8 +610,8 @@ class SoundFX {
                     const isP1 = this.currentPlayer === 1;
                     this.turnBadge.textContent = isP1 ? "Player 1's Turn" : (this.isVSComputer ? "Computer's Turn" : "Player 2's Turn");
                     this.turnBadge.className = isP1
-                        ? "text-xs font-bold px-3 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 animate-pulse mt-0.5"
-                        : "text-xs font-bold px-3 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 animate-pulse mt-0.5";
+                        ? "turn-badge w-28 h-10 text-xs font-bold px-2 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 animate-pulse mt-0.5"
+                        : "turn-badge w-28 h-10 text-xs font-bold px-2 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 animate-pulse mt-0.5";
                     if (this.isVSComputer && this.currentPlayer === 2) this.scheduleAIShot();
 
                 }
@@ -604,7 +620,7 @@ class SoundFX {
             scheduleAIShot() {
                 if (this.aiThinking || this.gameState !== 'AIMING' || !this.isVSComputer) return;
                 this.aiThinking = true;
-                this.turnBadge.textContent = 'Computer is thinking…';
+                this.turnBadge.textContent = 'AI is thinking…';
                 window.setTimeout(() => {
                     if (!this.isVSComputer || this.gameState !== 'AIMING' || this.currentPlayer !== 2) {
                         this.aiThinking = false;

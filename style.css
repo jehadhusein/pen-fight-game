@@ -111,3 +111,33 @@
   .mode-picker { gap: 3px; }
   #aiDifficulty { max-width: 82px; font-size: 11px; }
 }
+
+
+/* Contact and feedback links */
+.contact-links {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 11px;
+}
+.contact-links a {
+    color: #fbbf24;
+    text-decoration: none;
+    white-space: nowrap;
+}
+.contact-links a:hover {
+    color: #fde68a;
+    text-decoration: underline;
+}
+
+/* Keep the status pill the same size for every turn to prevent layout shifting. */
+.turn-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    line-height: 1.15;
+    flex-shrink: 0;
+}
